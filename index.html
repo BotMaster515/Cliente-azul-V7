@@ -112,6 +112,9 @@
 
     const channel = client.channels.get('sala-' + SALA_CODE);
 
+    // El host entra a presencia para poder consultarla
+    channel.presence.enter({ role: 'host' });
+
     // Mensajes → burbujas
     channel.subscribe('message', (msg) => {
       const data = msg.data;
