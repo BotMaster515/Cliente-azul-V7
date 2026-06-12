@@ -125,12 +125,13 @@
     // Usamos presence.get() para obtener el estado real cada vez
     // que haya un cambio. Esto es más robusto que mantener un Set
     // cuando los clientes ya traen clientId único.
-    function refreshCount() {
-      channel.presence.get(function(err, members) {
-        if (!err && members) {
-          connCountEl.textContent = members.length;
-        }
-      });
+       async function refreshCount() {
+      try {
+        const members = await channel.presence.get();
+        connCountEl.textContent = members.length;
+      } catch(err) {
+        console.log('Error presencia:', err);
+      }
     }
 
     channel.presence.subscribe('enter',  function() { refreshCount(); });
