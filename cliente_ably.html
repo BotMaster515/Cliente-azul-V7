@@ -383,7 +383,9 @@
   // ════════════════════════════════════════════
   function initAbly() {
     try {
-      ablyClient = new Ably.Realtime({ key: ABLY_API_KEY, closeOnUnload: true });
+      // Generamos un ID único por sesión para que el host pueda contarnos correctamente
+  const myClientId = 'user-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+  ablyClient = new Ably.Realtime({ key: ABLY_API_KEY, clientId: myClientId, closeOnUnload: true });
 
       ablyClient.connection.on('connected', () => {
         badgeDot.className = 'online';
