@@ -128,6 +128,7 @@
        async function refreshCount() {
       try {
         const members = await channel.presence.get();
+        const clients = members.filter(m => m.clientId !== 'host-pantalla');
         connCountEl.textContent = members.length;
       } catch(err) {
         console.log('Error presencia:', err);
