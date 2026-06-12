@@ -226,7 +226,7 @@
 
     <div class="field-group">
       <div class="field-label">Código de sala</div>
-      <input class="field-input" id="code-input" type="text" placeholder="ej: BG19P1" maxlength="10" autocomplete="off" />
+      <input class="field-input" id="code-input" type="text" placeholder="" maxlength="10" autocomplete="off" />
     </div>
 
     <div class="field-group">
@@ -256,7 +256,7 @@
   <div id="sent-feed">
     <div id="empty-feed">
       <div id="empty-feed-icon">◎</div>
-      <span>aquí verás los mensajes<br>cifrados de los demás</span>
+      <span>tus mensajes aparecerán<br>en la pantalla principal</span>
     </div>
   </div>
 
@@ -383,7 +383,9 @@
   // ════════════════════════════════════════════
   function initAbly() {
     try {
-      ablyClient = new Ably.Realtime({ key: ABLY_API_KEY, closeOnUnload: true });
+      // Generamos un ID único por sesión para que el host pueda contarnos correctamente
+  const myClientId = 'user-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+  ablyClient = new Ably.Realtime({ key: ABLY_API_KEY, clientId: myClientId, closeOnUnload: true });
 
       ablyClient.connection.on('connected', () => {
         badgeDot.className = 'online';
@@ -451,8 +453,8 @@
     const channelName = 'sala-' + code;
     ablyChannel = ablyClient.channels.get(channelName);
 
-    // Escuchar mensajes de otros usuarios
-    ablyChannel.subscribe('message', (msg) => {
+    // Escuchar mensajes del host (broadcasts)
+    ablyChannel.subscribe('broadcast', (msg) => {
       const data = msg.data;
       if (data && data.text && data.name !== myName) {
         addReceivedMessage(data.text, data.name || 'anon');
@@ -520,17 +522,20 @@
   }
 
   // ════════════════════════════════════════════
-  //  MENSAJES RECIBIDOS (de otros usuarios)
+  //  MENSAJES RECIBIDOS (broadcast del host)
   // ════════════════════════════════════════════
   function addReceivedMessage(text, name) {
     if (emptyFeed) emptyFeed.style.display = 'none';
+    const ciphered = cesarCipher(text, myKey);
     const el = document.createElement('div');
     el.className = 'recv-msg';
-    el.style.cursor = 'default';
     el.innerHTML = `
       <div class="recv-name">${esc(name)}</div>
-      <div class="recv-ciphered" style="display:block;color:rgba(240,236,228,0.7);font-size:14px;">${esc(text)}</div>
+      <div class="recv-ciphered">${esc(ciphered)}</div>
+      <div class="recv-deciphered">${esc(text)}</div>
+      <div class="recv-hint">toca para descifrar</div>
     `;
+    el.addEventListener('click', () => el.classList.toggle('revealed'));
     sentFeed.appendChild(el);
     sentFeed.scrollTop = sentFeed.scrollHeight;
   }
