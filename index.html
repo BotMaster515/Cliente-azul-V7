@@ -70,7 +70,16 @@
 
 <div id="qr-badge">
   <span id="qr-label">escanear para unirse</span>
-  <img id="qr-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABHsAAAR7CAIAAACfMz+5AAAABmJLR0QA/wD/AP+gvaeTAAAgAElEQVR4nOzdd3hU1bo28D2ZAZKQHlKQTggpdnoaJbQkBBBFsYsdjwp4ECsKIgp2wcoRVBQLWA6S0EIKJXSUVwRSKQKeA6GlQgKZmfePaA6SnTCZ2c9a8+y5f9e+ru9c7wf3vufZa2RW9mTGYLVaFQAAAAAAACDgJrsAAAAAAACAbmHHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAIAKdlwAAAAAAABUsOMCAAAAAACggh0XAAAAAAAAFey4AAAAAAAAqGDHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAIAKdlwAAAAAAABUsOMCAAAAAACggh0XAAAAAAAAFey4AAAAAAAAqGDHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAIAKdlwAAAAAAABUsOMCAAAAAACggh0XAAAAAAAAFey4AAAAAAAAqGDHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAIAKdlwAAAAAAABUsOMCAAAAAACggh0XAAAAAAAAFey4AAAAAAAAqGDHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAIAKdlwAAAAAAABUsOMCAAAAAACggh0XAAAAAAAAFey4AAAAAAAAqGDHBQAAAAAAQAU7LgAAAAAAACrYcQEAAAAAAFDBjgsAAAAAAICKSXYB+xkMBtkVoHl8fX3d3NxatWoV+JcrrriiU6dOXbp06dy5c2RkpJeXl+yO8D979+5NT0/Pzc3Ny8srKSmpqKjw9vYODg6Ojo6Pj09NTY2OjnbOcFCFCyoeZq4zmDkvVVVVBQUFBw8eOHTo0KFDh/7zn/+c+kt1dbXVai0tLZXdEZrHarXKrmAuK1uyJwcaMxgMYWFhN9100wsvvJCZmVlRUWF7ibmuzMzMfv36NXvJYmJisrKynCocVOGCioeZ6wxmzkJVVVVOTs6sWbPGjh0bHh7u5oZ3cumN7CVmP87VQddMJlOvXr2eeuqpnJycixcvyl5urqKgoGD48OHNulLJyclFRUXSw0EVLqh4mLnOYOYsnDt37scff5wwYYKfn58dCwRMyd539uNcHVyPl5fX7bffnpGRYTabZS9AvVmwYIHJZP8vdppMpgULFkgJB1W4oOJh5jqDmTubi5cubd68+ZlnnunTp4+9CwRMyV539uNcHVyPl5fX7bffnpGRYTabZS9AvVmwYIHJZP8vdppMpgULFkgJB1W4oOJh5jqDmTuhi5cubd26ddU3X1z/1W0+p+gSTiY1be/O5YSLZx+WqZJ9twfhJtVa9HbOatFLb+d6VwvfsTBb9K5z04P/U+3ckZ1cY9tPvhZFovkAAAAASUVORK5CYII=" alt="QR" />
+  <img id="qr-img" src="" alt="QR" />
+  <input type="file" id="qr-input" accept="image/*" style="display:none" />
+  <label for="qr-input" id="qr-placeholder" style="
+    width:110px; height:110px; border-radius:6px;
+    background:rgba(53,184,241,0.08); border:1px dashed rgba(53,184,241,0.4);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-family:'Space Mono',monospace;
+    font-size:9px; color:rgba(53,184,241,0.5); letter-spacing:1px;
+    text-align:center; padding:8px;
+  ">CLICK PARA CARGAR QR</label>
 </div>
 
 <div id="canvas">
@@ -208,6 +217,21 @@
 
   initAbly();
   animate();
+  const qrInput = document.getElementById('qr-input');
+  const qrImg   = document.getElementById('qr-img');
+  const qrPlaceholder = document.getElementById('qr-placeholder');
+  
+  qrInput.addEventListener('change', function() {
+    const file = qrInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      qrImg.src = e.target.result;
+      qrImg.style.display = 'block';
+      qrPlaceholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
 </script>
 </body>
 </html>
