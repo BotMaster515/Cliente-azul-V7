@@ -95,7 +95,11 @@
   const waitingMsg = document.getElementById('waiting-msg');
 
   function initAbly() {
-    const client = new Ably.Realtime({ key: ABLY_API_KEY, closeOnUnload: true });
+    const client = new Ably.Realtime({ 
+      key: ABLY_API_KEY, 
+      clientId: 'host-pantalla', 
+      closeOnUnload: true 
+    });
 
     client.connection.on('connected', () => {
       roomDot.className = 'online';
