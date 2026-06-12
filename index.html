@@ -79,8 +79,8 @@
 <div id="waiting-msg">esperando mensajes...</div>
 
 <script>
-  const ABLY_API_KEY = 'IuJmsQ.ILhVVQ:2elAknwxoShlQV4IU1Y3MV8Hf0X02xZ3v8dtGmuJDkI';
-  const SALA_CODE    = 'VINCULO';
+  const ABLY_API_KEY = 'TU_API_KEY_AQUI';
+  const SALA_CODE    = 'LOBBY01';
 
   const MAX_BUBBLES = 30, TOP_PAD = 56, BOT_PAD = 48;
   const MIN_SPEED = 0.25, MAX_SPEED = 0.85, DAMPING = 0.994, REPEL_K = 0.55, ATTRACT_K = 0.00012;
@@ -95,11 +95,7 @@
   const waitingMsg = document.getElementById('waiting-msg');
 
   function initAbly() {
-    const client = new Ably.Realtime({ 
-      key: ABLY_API_KEY, 
-      clientId: 'host-pantalla', 
-      closeOnUnload: true 
-    });
+    const client = new Ably.Realtime({ key: ABLY_API_KEY, closeOnUnload: true });
 
     client.connection.on('connected', () => {
       roomDot.className = 'online';
@@ -112,34 +108,47 @@
 
     const channel = client.channels.get('sala-' + SALA_CODE);
 
-    // El host entra a presencia para poder consultarla
-    channel.presence.enter({ role: 'host' });
-
-    // Mensajes → burbujas
+    // Mensajes → burbujas y reenvío a todos los clientes
     channel.subscribe('message', (msg) => {
       const data = msg.data;
-      if (data && data.text) addBubble(data.text, data.name || 'anon', data.original || normalize(data.text));
+      if (data && data.text) {
+        addBubble(data.text, data.name || 'anon', data.original || normalize(data.text));
+        // Reenviar a todos los clientes para que lo vean en su chat
+        channel.publish('message', {
+          text: data.text,
+          name: data.name || 'anon',
+          original: data.original || ''
+        });
+      }
     });
 
-    // ── Contador de conectados ──────────────────────────────────
-    // Usamos presence.get() para obtener el estado real cada vez
-    // que haya un cambio. Esto es más robusto que mantener un Set
-    // cuando los clientes ya traen clientId único.
-       async function refreshCount() {
-      try {
-        const members = await channel.presence.get();
-        connCountEl.textContent = members.length;
-      } catch(err) {
-        console.log('Error presencia:', err);
-      }
-    }
+    // Contador — Set para evitar duplicados
+    const presentIds = new Set();
+    function refreshCount() { connCountEl.textContent = presentIds.size; }
 
-    channel.presence.subscribe('enter',  function() { refreshCount(); });
-    channel.presence.subscribe('leave',  function() { refreshCount(); });
-    channel.presence.subscribe('update', function() { refreshCount(); });
+    channel.presence.subscribe('enter', (m) => {
+      presentIds.add(m.clientId || m.connectionId);
+      refreshCount();
+    });
+    channel.presence.subscribe('leave', (m) => {
+      presentIds.delete(m.clientId || m.connectionId);
+      refreshCount();
+    });
+    channel.presence.subscribe('update', (m) => {
+      presentIds.add(m.clientId || m.connectionId);
+      refreshCount();
+    });
 
-    // Snapshot inicial al conectar
-    client.connection.on('connected', function() { refreshCount(); });
+    // Snapshot al conectar (por si ya hay gente)
+    client.connection.on('connected', () => {
+      channel.presence.get((err, members) => {
+        if (!err && members) {
+          presentIds.clear();
+          members.forEach(m => presentIds.add(m.clientId || m.connectionId));
+          refreshCount();
+        }
+      });
+    });
   }
 
   const normalize = t => String(t).toLowerCase().trim();
